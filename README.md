@@ -36,7 +36,7 @@ const routes: Routes = [
 E finalmente vamos estruturar o HTML de `BuscaComponent`:
 ```HTML
 <!-- src\app\pages\busca\busca.component.html -->
- 
+
 <div class="busca-page">
   <app-banner src="assets/imagens/banner-busca.png" alt=""/>
   <app-container>
@@ -46,4 +46,52 @@ E finalmente vamos estruturar o HTML de `BuscaComponent`:
     </section>
   </app-container>
 </div>
+```
+
+## Navegando com os dados
+Vamos criar um novo evento de realização de busca em `FormBuscaComponent` e criar um método para emitir esse evento:
+```TypeScript
+// src\app\shared\form-busca\form-busca.component.ts
+
+import { Component, EventEmitter, Output } from '@angular/core';
+
+// Resto do código
+export class FormBuscaComponent {
+  @Output() realizarBusca = new EventEmitter()
+
+  // Resto do código
+
+    buscar () {
+      const formBuscaValue = this.formBuscaService.formBusca.value
+      this.realizarBusca.emit(formBuscaValue)
+    }
+}
+```
+
+Vamos criar em `HomeComponent` um método para tratar o evento de realização de busca:
+```TypeScript
+// src\app\pages\home\home.component.ts
+
+import { Router } from '@angular/router';
+// Resto do código
+
+export class HomeComponent implements OnInit {
+  constructor(
+    // Resto do código
+    private router : Router,
+  ) { }
+  // Resto do código
+  navegarParaBusca(ev: any) {
+    this.router.navigate(['busca'])
+  }
+}
+```
+
+E finalmente vamos atualizar o HTML para ligar o evento emitido ao método de tratamento do evento:
+```HTML
+<!-- src\app\pages\home\home.component.html -->
+
+<!-- Resto do código -->
+  <app-form-busca (realizarBusca)="navegarParaBusca($event)"></app-form-busca>
+<!-- Resto do código -->
 ```
