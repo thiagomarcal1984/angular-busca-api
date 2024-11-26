@@ -95,3 +95,117 @@ E finalmente vamos atualizar o HTML para ligar o evento emitido ao método de tr
   <app-form-busca (realizarBusca)="navegarParaBusca($event)"></app-form-busca>
 <!-- Resto do código -->
 ```
+
+## Listando as passagens
+Vamos exibir as passagens no console do browser, por ora.
+
+Criando o `PassagensService`:
+```bash
+ng g s core/services/passagens --skip-tests 
+# Output
+CREATE src/app/core/services/passagens.service.ts (138 bytes)
+```
+
+Implementação  do `PassagensService`:
+```TypeScript
+// src\app\core\services\passagens.service.ts
+
+import { HttpClient } from '@angular/common/http';
+import { Injectable } from '@angular/core';
+import { environment } from 'src/environments/environment';
+
+@Injectable({
+  providedIn: 'root'
+})
+export class PassagensService {
+  apiUrl : string = environment.apiUrl
+
+  constructor(
+    private httpClient : HttpClient,
+  ) { }
+
+  getPassagens(search: any) {
+    const params = search
+    return this.httpClient.get(this.apiUrl + '/passagem/search', {params})
+  }
+}
+```
+
+Uso do `PassagensService` em `BuscaComponent`:
+```TypeScript
+// src\app\pages\busca\busca.component.ts
+
+import { PassagensService } from './../../core/services/passagens.service';
+import { Component, OnInit } from '@angular/core';
+
+@Component({
+  // Resto do código
+})
+export class BuscaComponent implements OnInit {
+  constructor(
+    private passagensService: PassagensService,
+  ) {}
+
+  ngOnInit(): void {
+    const buscaPadrao = {
+      data: new Date().toISOString,
+      pagina: 1,
+      porPagina: 25,
+      somenteIda: false,
+      passageirosAdultos: 1,
+      tipo: 'Executiva',
+    }
+    this.passagensService.getPassagens(buscaPadrao).subscribe(
+      res => console.log(res)
+    )
+  }
+}
+```
+
+Quando visitamos o `BuscaComponent`, o console do browser exibe na saída todas as passagens do tipo "Executiva", conforme a variável `buscaPadrao` de `BuscaComponent`:
+```JSON
+{
+    "paginaAtual": "1",
+    "ultimaPagina": 1,
+    "total": 10,
+    "precoMin": 20,
+    "precoMax": 5000,
+    "resultado": [
+        {
+            "id": 2,
+            "tipo": "Executiva",
+            "precoIda": 2800,
+            "precoVolta": 2700,
+            "taxaEmbarque": 175,
+            "conexoes": 2,
+            "tempoVoo": 6,
+            "origem": {
+                "id": 11,
+                "nome": "Paraíba",
+                "sigla": "PB"
+            },
+            "destino": {
+                "id": 19,
+                "nome": "Roraima",
+                "sigla": "RR"
+            },
+            "companhia": {
+                "id": 4,
+                "nome": "Latam"
+            },
+            "dataIda": null,
+            "dataVolta": null,
+            "orcamento": [
+                {
+                    "descricao": "1 adulto, executiva",
+                    "preco": 2800,
+                    "taxaEmbarque": 175,
+                    "total": 2975
+                }
+            ],
+            "total": 2975
+        },
+        // Outros resultados
+    ]
+}
+```
