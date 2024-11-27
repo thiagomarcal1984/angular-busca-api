@@ -209,3 +209,98 @@ Quando visitamos o `BuscaComponent`, o console do browser exibe na saída todas 
     ]
 }
 ```
+## Dando nome aos envolvidos
+Primeiro vamos definir alguns tipos em `type.ts`:
+```TypeScript
+// src\app\core\types\type.ts
+
+// Resto do código
+export interface Resultado {
+  paginaAtual : number,
+  ultimaPagina : number,
+  total : number,
+  precoMin : number,
+  precoMax : number,
+  resultado : Passagem[],
+}
+
+export interface Passagem {
+  tipo: string,
+  precoIda: number,
+  precoVolta: number,
+  taxaEmbarque: number,
+  conexoes: number,
+  tempoVoo: number,
+  origem: UnidadeFederativa,
+  destino: UnidadeFederativa,
+  companhia: Companhia,
+  dataIda: Date,
+  dataVolta: Date,
+  total: number,
+  orcamento: Orcamento
+}
+
+export interface Companhia {
+  id: string,
+  nome: string
+}
+
+export interface Orcamento {
+  descricao: string,
+  preco: number,
+  taxaEmbarque: number,
+  total: number
+}
+```
+> Note que os tipos mais complexos estão declarados primeiro: `Resultado` contém um array de `Passagem`; e `Passagem` contém uma `Companhia` e um `Orcamento`.
+
+Em seguida, vamos mudar `PassagensService` para tipar o retorno do cliente HTTP:
+```TypeScript
+// src\app\core\services\passagens.service.ts
+
+import { Resultado } from '../types/type';
+import { Observable } from 'rxjs/internal/Observable';
+
+// Resto do código
+export class PassagensService {
+  apiUrl : string = environment.apiUrl
+
+  constructor(
+    private httpClient : HttpClient,
+  ) { }
+
+  getPassagens(search: any) : Observable<Resultado> {
+    const params = search
+    return this.httpClient.get<Resultado>(this.apiUrl + '/passagem/search', {params})
+  }
+}
+```
+> Note que os métodos `PassagensService.getPassagens` e `HttpClient.get` agora retornam um `Observable<Resultado>`.
+
+Finalmente, vamos mudar como `BuscaComponent` responde ao retorno do `Observable`:
+```TypeScript
+// src\app\pages\busca\busca.component.ts
+
+import { Passagem } from 'src/app/core/types/type';
+
+// Resto do código
+
+export class BuscaComponent implements OnInit {
+  passagens: Passagem[] = []
+  // Resto do código
+
+  ngOnInit(): void {
+    // Resto do código
+    this.passagensService.getPassagens(buscaPadrao).subscribe(
+      res => {
+        console.log(res)
+        this.passagens = res.resultado
+        console.log(this.passagens)
+      }
+    )
+  }
+}
+```
+> Note que o browser tem duas saídas ao carregar `BuscaComponent`: a resposta completa; e a propriedade `resultado` da resposta completa 
+> 
+> O tipo da resposta é um `Resultado` e sua propriedade `resultado` é um array de `Passagem`. O conteúdo da propriedade `resultado` (tipo `Passagem[]`) é atribuído à propriedade `passagens` de `BuscaComponent`.
